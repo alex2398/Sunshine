@@ -378,4 +378,5 @@ public class ForecastFragment extends Fragment{
         weatherTask.execute(postalCode + "," + countryCode);
     }
 
+
 }

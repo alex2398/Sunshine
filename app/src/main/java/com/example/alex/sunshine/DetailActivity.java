@@ -1,12 +1,9 @@
 package com.example.alex.sunshine;
 
 import android.app.Activity;
-import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
-import android.view.MenuItem;
-import android.widget.TextView;
+
 
 
 public class DetailActivity extends Activity {
@@ -17,7 +14,6 @@ public class DetailActivity extends Activity {
         setContentView(R.layout.activity_detail);
 
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

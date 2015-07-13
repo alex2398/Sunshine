@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ShareActionProvider;
 import android.widget.TextView;
+import android.widget.Toolbar;
 
 
 /**
@@ -58,8 +59,10 @@ public class DetailActivityFragment extends Fragment {
 
         MenuItem menuItem = menu.findItem(R.id.action_share);
 
+        // Asignamos el ShareActionProvider al menuItem "compartir"
         ShareActionProvider mShareActionProvider = (ShareActionProvider) menuItem.getActionProvider();
 
+        // Le asignamos un nuevo intent de compartir
         if (mShareActionProvider != null) {
             mShareActionProvider.setShareIntent(createShareForecastIntent());
         } else {
@@ -78,13 +81,14 @@ public class DetailActivityFragment extends Fragment {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
+        // Click en settings, abrimos settings
         if (id == R.id.action_settings) {
             Intent intent = new Intent(getActivity(), SettingsActivity.class);
             startActivity(intent);
             return true;
         } else {
+            // Click en icono share, creamos el intent compartir
             if (id == R.id.action_share) {
-
                 createShareForecastIntent();
                 return true;
 
@@ -95,10 +99,14 @@ public class DetailActivityFragment extends Fragment {
     }
 
     private Intent createShareForecastIntent() {
+        // Creamos este método para llamarlo y crear el intent para compartir
         Intent intent = new Intent(Intent.ACTION_SEND);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+        // Organizamos el stack para que al volver de la app elegida, retorne a nuestra app
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
         intent.setType("text/plain");
         intent.putExtra(Intent.EXTRA_TEXT, mForecast + FORECAST_SHARE_HASHTAG);
         return intent;
     }
+
+
 }
