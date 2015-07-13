@@ -1,9 +1,12 @@
 package com.example.alex.sunshine;
 
 import android.app.Fragment;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -12,8 +15,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,6 +51,12 @@ public class ForecastFragment extends Fragment{
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        updateWeather();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
@@ -57,12 +68,6 @@ public class ForecastFragment extends Fragment{
 
         // Creamos datos falsos y rellenamos el adapter con ellos, luego los actualizaremos
         List<String> weekForecast = new ArrayList<>();
-
-        weekForecast.add("Hoy - Soleado - 22/40");
-        weekForecast.add("Mañana - Soleado - 22/40");
-        weekForecast.add("Lunes - Soleado - 22/40");
-        weekForecast.add("Martes - Soleado - 22/40");
-        weekForecast.add("Miercoles - Soleado - 22/40");
 
         /* El array adapter necesita los siguientes parametros:
             1. El context
@@ -77,6 +82,19 @@ public class ForecastFragment extends Fragment{
                 weekForecast);
 
         forecast.setAdapter(adapter);
+
+        forecast.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                String temperatureText = (String) forecast.getItemAtPosition(position);
+                Intent intent = new Intent(getActivity(),DetailActivity.class);
+                intent.putExtra(Intent.EXTRA_TEXT,temperatureText);
+                startActivity(intent);
+
+                //Toast.makeText(getActivity(),temperatureText,Toast.LENGTH_LONG).show();
+            }
+        });
 
         return rootview;
     }
@@ -112,7 +130,7 @@ public class ForecastFragment extends Fragment{
         }
 
         /**
-         * Take the String representing the complete forecast in JSON Format and
+         * Take the String representing the complete mForecast in JSON Format and
          * pull out the data we need to construct the Strings needed for the wireframes.
          *
          * Fortunately parsing is easy:  constructor takes the JSON string and converts it
@@ -124,9 +142,9 @@ public class ForecastFragment extends Fragment{
             // These are the names of the JSON objects that need to be extracted.
             final String OWM_LIST = "list";
             final String OWM_WEATHER = "weather";
-            final String OWM_TEMPERATURE = "main";
-            final String OWM_MAX = "temp_max";
-            final String OWM_MIN = "temp_min";
+            final String OWM_TEMPERATURE = "temp";
+            final String OWM_MAX = "max";
+            final String OWM_MIN = "min";
             final String OWM_DESCRIPTION = "main";
 
             JSONObject forecastJson = new JSONObject(forecastJsonStr);
@@ -204,24 +222,34 @@ public class ForecastFragment extends Fragment{
             String forecastJsonStr = null;
 
             String format = "json";
-            String units = "metric";
+
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+
+            String units = preferences.getString("units",getString(R.string.pref_units_default));
+            String language = "es";
             int numDays = 7;
 
             try {
             /* Construimos la URL de consulta para OpenWeatherMap */
 
 
+                final String FORECAST_BASE_URL =
+                        "http://api.openweathermap.org/data/2.5/forecast/daily?";
+                final String QUERY_PARAM = "q";
+                final String FORMAT_PARAM = "mode";
+                final String UNITS_PARAM = "units";
+                final String DAYS_PARAM = "cnt";
+                final String LANG_PARAM = "lang";
 
-                builder.scheme("http://api.openweathermap.org/data/2.5/forecast/daily")
-                .appendQueryParameter("q", params[0])
-                        .appendQueryParameter("mode", format)
-                        .appendQueryParameter("units",units)
-                        .appendQueryParameter("cnt",String.valueOf(numDays));
+                Uri builtUri = Uri.parse(FORECAST_BASE_URL).buildUpon()
+                        .appendQueryParameter(QUERY_PARAM, params[0])
+                        .appendQueryParameter(FORMAT_PARAM, format)
+                        .appendQueryParameter(UNITS_PARAM, units)
+                        .appendQueryParameter(DAYS_PARAM, Integer.toString(numDays))
+                        .appendQueryParameter(LANG_PARAM, language)
+                        .build();
 
-
-                URL url = new URL(builder.build().toString());
-
-
+                URL url = new URL(builtUri.toString());
                 // Creamos el request a openweathermap y abrimos la conexion
 
                 urlConnection = (HttpURLConnection) url.openConnection();
@@ -256,7 +284,7 @@ public class ForecastFragment extends Fragment{
 
 
             } catch (IOException e) {
-                Log.e(TAG, "Error ", e);
+                Log.e(TAG, e.getMessage(), e);
                 // Si no obtenemos datos, no intentamos parsearlo
                 return null;
             } finally{
@@ -299,7 +327,7 @@ public class ForecastFragment extends Fragment{
                 adapter.addAll(strings);
 
                 // Otra forma:
-                // forecast.setAdapter(adapter);
+                // mForecast.setAdapter(adapter);
             }
         }
     }
@@ -317,24 +345,37 @@ public class ForecastFragment extends Fragment{
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         // Con este metodo inflamos las opciones de menu basandonos en el xml
         super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.menu_forecast_fragment, menu);
+        inflater.inflate(R.menu.forecast_fragment, menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Con este metodo manejamos los eventos en los items del menu
 
+
         int id = item.getItemId();
         if (id == R.id.refresh_data) {
             // Acciones del menu pulsado
-            // En este caso creamos una tarea para obtener el tiempo en segundo plano
-            FetchWeatherTask weatherTask = new FetchWeatherTask();
-            weatherTask.execute("94043,us");
+
+            updateWeather();
             return true;
         }
 
         return super.onOptionsItemSelected(item);
 
+    }
+
+    private void updateWeather() {
+        String postalCode = null;
+        String countryCode = null;
+        // Obtenemos los valores de las preferencias de la app
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        postalCode = preferences.getString("location",getString(R.string.pref_location_default));
+        countryCode = preferences.getString("country", getString(R.string.pref_country_default));
+
+        // En este caso creamos una tarea para obtener el tiempo en segundo plano
+        FetchWeatherTask weatherTask = new FetchWeatherTask();
+        weatherTask.execute(postalCode + "," + countryCode);
     }
 
 }

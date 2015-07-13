@@ -1,0 +1,36 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+
+    <!-- NOTE: EditTextPreference accepts EditText attributes. -->
+    <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
+    <EditTextPreference
+        android:key="@string/pref_location_key"
+        android:title="@string/pref_location_label"
+        android:defaultValue="@string/pref_location_default"
+        android:inputType="text"
+        android:singleLine="true"/>
+
+    <EditTextPreference
+        android:key="@string/pref_country_key"
+        android:title="@string/pref_country_label"
+        android:defaultValue="@string/pref_country_default"
+        android:inputType="text"
+        android:singleLine="true"/>
+
+    <ListPreference
+        android:key="@string/pref_units_key"
+        android:title = "@string/pref_units_label"
+        android:defaultValue="@string/pref_units_default"
+        android:entries="@array/units"
+        android:entryValues="@array/units_values"/>
+
+
+
+
+    <!-- NOTE: Hide buttons to simplify the UI. Users can touch outside the dialog to
+         dismiss it. -->
+    <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->
+
+
+</PreferenceScreen>
