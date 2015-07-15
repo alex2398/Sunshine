@@ -18,6 +18,7 @@ package com.example.alex.sunshine.data;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.example.alex.sunshine.data.WeatherContract.LocationEntry;
 import com.example.alex.sunshine.data.WeatherContract.WeatherEntry;
@@ -28,6 +29,7 @@ import com.example.alex.sunshine.data.WeatherContract.WeatherEntry;
 
 /*  Usamos una clase que extienda a SQLiteOpenHelper, que es la clase
     que nos permite usar bases de datos, una vez creado el contract.
+    Para cualquier operacion con la base de datos, usamos esta clase.
  */
 public class WeatherDbHelper extends SQLiteOpenHelper {
 
@@ -73,7 +75,25 @@ public class WeatherDbHelper extends SQLiteOpenHelper {
                 " UNIQUE (" + WeatherEntry.COLUMN_DATE + ", " +
                 WeatherEntry.COLUMN_LOC_KEY + ") ON CONFLICT REPLACE);";
 
-        sqLiteDatabase.execSQL(SQL_CREATE_WEATHER_TABLE);
+        // Tabla location
+
+        final String SQL_CREATE_LOCATION_TABLE = "CREATE TABLE " + LocationEntry.TABLE_NAME + " (" +
+                LocationEntry._ID + " INTEGER PRIMARY KEY," +
+
+                // the ID of the location entry associated with this weather data
+                LocationEntry.COLUMN_LOCATION_SETTING + " TEXT UNIQUE NOT NULL, " +
+                LocationEntry.COLUMN_CITY_NAME + " TEXT NOT NULL, " +
+                LocationEntry.COLUMN_COORD_LONG + " REAL NOT NULL, " +
+                LocationEntry.COLUMN_COORD_LAT + " REAL NOT NULL);";
+
+            Log.d("ALEX", SQL_CREATE_LOCATION_TABLE);
+
+            // Creamos primero la tabla location y luego weather debido a la relacion entre ellas,
+            //  debe existir la foreign key (location) antes de crear la tabla weather
+            sqLiteDatabase.execSQL(SQL_CREATE_LOCATION_TABLE);
+            sqLiteDatabase.execSQL(SQL_CREATE_WEATHER_TABLE);
+
+
     }
 
     @Override
